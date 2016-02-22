@@ -156,6 +156,20 @@ class MissionItem(models.Model):
     attached_image = models.ImageField(upload_to='tigaserver_mission_images', blank=True, null=True,
                                        help_text='Optional Image displayed to user within the help message. File.')
 
+class ReportManager(models.Manager):
+    def reports_pending_by_one(self):
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT * FROM public.tigaserver_app_report
+        """)
+        result_list = []
+        for row in cursor.fetchall():
+            p = self.model(row)
+            if p.is_pending_validation_by_one:
+                result_list.append(p)
+        return result_list
+
 
 class Report(models.Model):
     version_UUID = models.CharField(max_length=36, primary_key=True, help_text='UUID randomly generated on '
@@ -716,6 +730,15 @@ class Report(models.Model):
                 result += ' '
         return result
 
+    def is_pending_validation_by_one(self):
+        these_annotations = ExpertReportAnnotation.objects.filter(report=self)
+        not_validated_count = 0
+        for ano in these_annotations:
+            if not ano.validation_complete:
+                not_validated_count += 1
+        return not_validated_count == 1
+
+
     def get_expert_score_reports_bootstrap(self, user=None):
         result = ''
         these_annotations = ExpertReportAnnotation.objects.filter(report=self)
@@ -850,6 +873,8 @@ class Report(models.Model):
     creation_day_since_launch = property(get_creation_day_since_launch)
     creation_year = property(get_creation_year)
     creation_month = property(get_creation_month)
+
+    objects = ReportManager()
 
     class Meta:
         unique_together = ("user", "version_UUID")

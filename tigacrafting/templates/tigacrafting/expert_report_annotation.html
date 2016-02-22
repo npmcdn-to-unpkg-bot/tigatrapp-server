@@ -270,6 +270,12 @@
                 {% endif %}
 
             {% endblock %}
+
+            <h4> Work progress</h4>
+
+            {% block progress %}
+                <p>Longest validation delay: {{ longest_delay }}</p>
+            {% endblock %}
         </div>
     </div>
 

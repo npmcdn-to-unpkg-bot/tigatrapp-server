@@ -24,6 +24,7 @@ from io import BytesIO
 from operator import attrgetter
 from django.db.models import Q
 from django.contrib.auth.models import User, Group
+import utils
 
 
 def photos_to_tasks():
@@ -438,6 +439,17 @@ def expert_report_annotation(request, scroll_position='', tasks_per_page='10', l
             checked = request.GET.get('checked', checked)
             load_new_reports = request.GET.get('load_new_reports', load_new_reports)
             edit_mode = request.GET.get('edit_mode', edit_mode)
+        longest_delay = ''
+        most_delayed_user = ''
+        longest_delay_per_user = ''
+        n_reports_lacking_one_validator = 0
+        if this_user_is_expert:
+            longest_delay = utils.get_oldest_pending_report_delay(this_user)
+        if this_user_is_superexpert:
+            delay = utils.get_most_delayed_expert()
+            most_delayed_user = delay['user']
+            longest_delay_per_user = delay['delay']
+            n_reports_lacking_one_validator = utils.get_number_reports_pending_one_validation()
         current_pending = ExpertReportAnnotation.objects.filter(user=this_user).filter(validation_complete=False).count()
         my_reports = ExpertReportAnnotation.objects.filter(user=this_user).values('report')
         hidden_final_reports_superexpert = set(ExpertReportAnnotation.objects.filter(user__groups__name='superexpert', validation_complete=True, revise=True, status=-1).values_list('report', flat=True))
@@ -583,6 +595,10 @@ def expert_report_annotation(request, scroll_position='', tasks_per_page='10', l
         n_query_records = all_annotations.count()
         args['n_query_records'] = n_query_records
         args['tasks_per_page_choices'] = range(5, min(100, n_query_records)+1, 5)
+        args['longest_delay'] = longest_delay
+        args['most_delayed_user'] = most_delayed_user
+        args['longest_delay_per_user'] = longest_delay_per_user
+        args['n_reports_lacking_one_validator'] = n_reports_lacking_one_validator
         return render(request, 'tigacrafting/expert_report_annotation.html' if this_user_is_expert else 'tigacrafting/superexpert_report_annotation.html', args)
     else:
         return HttpResponse("You need to be logged in as an expert member to view this page. If you have have been recruited as an expert and have lost your log-in credentials, please contact MoveLab.")

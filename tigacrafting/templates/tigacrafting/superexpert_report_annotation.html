@@ -20,6 +20,11 @@
         them as is or mark them for revision and make changes using the same form that the experts used</p>
 {% endblock %}
 
+{% block progress %}
+    <p>User with longer delay: {{ most_delayed_user }} - {{ longest_delay_per_user }}</p>
+    <p>Number of reports pending validation from one user: {{ n_reports_lacking_one_validator }}</p>
+{% endblock %}
+
 {% block no_records_message %}
     {% if n_unchecked == 0 and n_confirmed == 0 and n_revised == 0 %}
         There are not yet any reports that have been validated by 3 experts. Please refresh this page later, once more
