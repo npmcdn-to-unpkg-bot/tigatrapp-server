@@ -275,6 +275,8 @@
 
             {% block progress %}
                 <p>Longest validation delay: {{ longest_delay }}</p>
+                <p>Number of assigned non-validated reports in the system: {{ workload_assigned_non_validated }}</p>
+                <p>Number of unassigned reports in the system: {{ workload_non_assigned }}</p>
             {% endblock %}
         </div>
     </div>

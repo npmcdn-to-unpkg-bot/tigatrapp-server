@@ -442,13 +442,18 @@ def expert_report_annotation(request, scroll_position='', tasks_per_page='10', l
         longest_delay = ''
         most_delayed_user = ''
         longest_delay_per_user = ''
+        most_recently_validated_by_3_report = ''
         n_reports_lacking_one_validator = 0
+        workload_assigned_non_validated = ExpertReportAnnotation.objects.filter(user__groups__name='expert').filter(validation_complete=False).count()
+        workload_non_assigned = ExpertReportAnnotation.objects.filter(user__groups__name='superexpert').filter(validation_complete=False).count()
         if this_user_is_expert:
             longest_delay = utils.get_oldest_pending_report_delay(this_user)
         if this_user_is_superexpert:
             delay = utils.get_most_delayed_expert()
             most_delayed_user = delay['user']
             longest_delay_per_user = delay['delay']
+            utils.get_most_recently_validated_report()
+            most_recently_validated_by_3_report = utils.get_most_recently_validated_report()
             n_reports_lacking_one_validator = utils.get_number_reports_pending_one_validation()
         current_pending = ExpertReportAnnotation.objects.filter(user=this_user).filter(validation_complete=False).count()
         my_reports = ExpertReportAnnotation.objects.filter(user=this_user).values('report')
@@ -599,6 +604,9 @@ def expert_report_annotation(request, scroll_position='', tasks_per_page='10', l
         args['most_delayed_user'] = most_delayed_user
         args['longest_delay_per_user'] = longest_delay_per_user
         args['n_reports_lacking_one_validator'] = n_reports_lacking_one_validator
+        args['workload_assigned_non_validated'] = workload_assigned_non_validated
+        args['workload_non_assigned'] = workload_non_assigned
+        args['most_recently_validated_by_3_report'] = most_recently_validated_by_3_report
         return render(request, 'tigacrafting/expert_report_annotation.html' if this_user_is_expert else 'tigacrafting/superexpert_report_annotation.html', args)
     else:
         return HttpResponse("You need to be logged in as an expert member to view this page. If you have have been recruited as an expert and have lost your log-in credentials, please contact MoveLab.")
